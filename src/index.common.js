@@ -9,6 +9,7 @@ import formlyUtil from './services/formlyUtil';
 import formlyWarn from './services/formlyWarn';
 
 import formlyCustomValidation from './directives/formly-custom-validation';
+import formlyNgModel from './directives/formly-ng-model';
 import formlyField from './directives/formly-field';
 import formlyFocus from './directives/formly-focus';
 import formlyForm from './directives/formly-form';
@@ -34,6 +35,7 @@ ngModule.factory('formlyUtil', formlyUtil);
 ngModule.factory('formlyWarn', formlyWarn);
 
 ngModule.directive('formlyCustomValidation', formlyCustomValidation);
+ngModule.directive('formlyNgModel', formlyNgModel);
 ngModule.directive('formlyField', formlyField);
 ngModule.directive('formlyFocus', formlyFocus);
 ngModule.directive('formlyForm', formlyForm);

@@ -28,7 +28,7 @@ describe('formlyNgModelAttrsManipulator', () => {
   it(`should have a limited number of automatically added attributes without any specific options`, () => {
     manipulate();
     // because different browsers place attributes in different places...
-    const spaces = '<input ng-model="model[options.key]" id="id" name="id">'.split(' ').length;
+    const spaces = '<input ng-model="model[options.key]" id="id" name="id" formly-ng-model>'.split(' ').length;
     expect(result.split(' ').length).to.equal(spaces);
     attrExists('ng-model');
     attrExists('id');

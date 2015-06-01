@@ -32,7 +32,7 @@ function formlyField($http, $q, $compile, $templateCache, formlyConfig, formlyVa
 
   // @ngInject
   function FormlyFieldController($scope, $timeout, $parse, $controller) {
-    /* jshint maxstatements:31 */
+    /* jshint maxstatements:33 */
     if ($scope.options.fieldGroup) {
       setupFieldGroup();
       return;
@@ -186,9 +186,35 @@ function formlyField($http, $q, $compile, $templateCache, formlyConfig, formlyVa
       $scope.options.options = $scope.options.options || {};
       $scope.options.options.formState = $scope.formState;
     }
+
+    function addFormControl(formControl){
+      $scope.options.formControl = formControl;
+      $scope.fc = formControl;
+      addShowMessagesWatcher();
+    }
+
+    function addShowMessagesWatcher() {
+      $scope.$watch(function watchShowValidationChange() {
+        const customExpression = formlyConfig.extras.errorExistsAndShouldBeVisibleExpression;
+        const {options, fc} = $scope;
+        if (!fc.$invalid) {
+          return false;
+        } else if (typeof options.validation.show === 'boolean') {
+          return options.validation.show;
+        } else if (customExpression) {
+          return formlyUtil.formlyEval($scope, customExpression, fc.$modelValue, fc.$viewValue);
+        } else {
+          let noTouchedButDirty = (angular.isUndefined(fc.$touched) && fc.$dirty);
+          return ($scope.fc.$touched || noTouchedButDirty);
+        }
+      }, function onShowValidationChange(show) {
+        $scope.options.validation.errorExistsAndShouldBeVisible = show;
+        $scope.showError = show; // shortcut for template authors
+      });
+    }
+
+    this.addFormControl = addFormControl;
   }
-
-
 
   // link function
   function fieldLink(scope, el) {
@@ -209,7 +235,6 @@ function formlyField($http, $q, $compile, $templateCache, formlyConfig, formlyVa
       .then(transcludeInWrappers(scope.options, scope.formOptions))
       .then(runManipulators(manipulators.postWrapper))
       .then(setElementTemplate)
-      .then(watchFormControl)
       .then(callLinkFunctions)
       .catch(error => {
         formlyWarn(
@@ -266,69 +291,6 @@ function formlyField($http, $q, $compile, $templateCache, formlyConfig, formlyVa
       return templateString;
     }
 
-    function watchFormControl(templateString) {
-      let stopWatchingField = angular.noop;
-      let stopWatchingShowError = angular.noop;
-      if (scope.options.noFormControl) {
-        return;
-      }
-      const templateEl = angular.element(`<div>${templateString}</div>`);
-      const ngModelNode = templateEl[0].querySelector('[ng-model],[data-ng-model]');
-      if (ngModelNode && ngModelNode.getAttribute('name')) {
-        watchFieldNameOrExistence(ngModelNode.getAttribute('name'));
-      }
-
-      function watchFieldNameOrExistence(name) {
-        const nameExpressionRegex = /\{\{(.*?)}}/;
-        const nameExpression = nameExpressionRegex.exec(name);
-        if (nameExpression) {
-          watchFieldName(nameExpression[1]);
-        } else {
-          watchFieldExistence(name);
-        }
-      }
-
-      function watchFieldName(expression) {
-        scope.$watch(expression, function oneFieldNameChange(name) {
-          if (name) {
-            stopWatchingField();
-            watchFieldExistence(name);
-          }
-        });
-      }
-
-      function watchFieldExistence(name) {
-        stopWatchingField = scope.$watch(`form["${name}"]`, function formControlChange(formControl) {
-          if (formControl) {
-            scope.fc = formControl; // shortcut for template authors
-            scope.options.formControl = formControl;
-            stopWatchingShowError();
-            addShowMessagesWatcher();
-          }
-        });
-      }
-
-      function addShowMessagesWatcher() {
-        stopWatchingShowError = scope.$watch(function watchShowValidationChange() {
-          const customExpression = formlyConfig.extras.errorExistsAndShouldBeVisibleExpression;
-          const {options, fc} = scope;
-          if (!fc.$invalid) {
-            return false;
-          } else if (typeof options.validation.show === 'boolean') {
-            return options.validation.show;
-          } else if (customExpression) {
-            return formlyUtil.formlyEval(scope, customExpression, fc.$modelValue, fc.$viewValue);
-          } else {
-            let noTouchedButDirty = (angular.isUndefined(fc.$touched) && fc.$dirty);
-            return (scope.fc.$touched || noTouchedButDirty);
-          }
-        }, function onShowValidationChange(show) {
-          scope.options.validation.errorExistsAndShouldBeVisible = show;
-          scope.showError = show; // shortcut for template authors
-        });
-      }
-    }
-
     function callLinkFunctions() {
       if (type && type.link) {
         type.link.apply(thusly, args);
@@ -337,7 +299,6 @@ function formlyField($http, $q, $compile, $templateCache, formlyConfig, formlyVa
         scope.options.link.apply(thusly, args);
       }
     }
-
 
     function runManipulators(manipulators) {
       return function runManipulatorsOnTemplate(template) {

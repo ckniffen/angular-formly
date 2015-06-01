@@ -27,6 +27,7 @@ function addFormlyNgModelAttrsManipulator(formlyConfig) {
     addIfNotPresent(modelNodes, 'name', scope.id);
 
     addValidation();
+    addFormlyNgModel();
     addModelOptions();
     addTemplateOptionsAttrs();
 
@@ -38,6 +39,10 @@ function addFormlyNgModelAttrsManipulator(formlyConfig) {
       if (angular.isDefined(options.validators) || angular.isDefined(options.validation.messages)) {
         addIfNotPresent(modelNodes, 'formly-custom-validation', '');
       }
+    }
+
+    function addFormlyNgModel(){
+      addIfNotPresent(modelNodes, 'formly-ng-model', '');
     }
 
     function addModelOptions() {

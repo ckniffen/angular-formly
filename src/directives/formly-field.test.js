@@ -700,7 +700,6 @@ describe('formly-field', function() {
         compileAndDigest();
         expect(isolateScope.fc).to.not.exist;
       });
-
     });
 
     describe(`name`, () => {
